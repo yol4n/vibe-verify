@@ -137,6 +137,9 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 font-medium w-full">
         <p>&copy; 2026 VibeVerify. Powered by Google Gemini 1.5 Flash. Dibuat dengan bangga untuk #JuaraVibeCoding.</p>
+        <p class="mt-2 text-xs text-slate-400">
+    Project by <span class="font-semibold text-slate-500">Yolan Dame Simbolon</span> 
+</p>
     </footer>
 
     <!-- Script Javascript Asinkronus -->
