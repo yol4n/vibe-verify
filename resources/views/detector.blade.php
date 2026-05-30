@@ -140,95 +140,96 @@
     </footer>
 
     <!-- Script Javascript Asinkronus -->
-    <script>
-        document.getElementById('detectorForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+<script>
+    document.getElementById('detectorForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-            const newsText = document.getElementById('news_text').value.trim();
-            const btnSubmit = document.getElementById('btnSubmit');
-            const loadingState = document.getElementById('loadingState');
-            const resultSection = document.getElementById('resultSection');
+        const newsText = document.getElementById('news_text').value.trim();
+        const btnSubmit = document.getElementById('btnSubmit');
+        const loadingState = document.getElementById('loadingState');
+        const resultSection = document.getElementById('resultSection');
 
-            // Validasi input minimal karakter
-            if (newsText.length < 30) {
-                alert('Tolong masukkan teks berita minimal 30 karakter agar AI kami dapat memberikan analisis yang komprehensif.');
+        if (newsText.length < 30) {
+            alert('Tolong masukkan teks berita minimal 30 karakter agar AI kami dapat memberikan analisis yang komprehensif.');
+            return;
+        }
+
+        btnSubmit.disabled = true;
+        loadingState.classList.remove('hidden');
+        resultSection.classList.add('hidden');
+        resultSection.classList.remove('opacity-100', 'scale-100');
+        resultSection.classList.add('opacity-0', 'scale-95');
+
+        try {
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    news_text: newsText
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                alert(result.message || 'Terjadi gangguan pada server. Silakan coba lagi.');
+                loadingState.classList.add('hidden');
                 return;
             }
 
-            // Masuk ke State Loading
-            btnSubmit.disabled = true;
-            loadingState.classList.remove('hidden');
-            resultSection.classList.add('hidden');
-            resultSection.classList.remove('opacity-100', 'scale-100');
-            resultSection.classList.add('opacity-0', 'scale-95');
+            if (result.success && result.data) {
+                const data = result.data;
 
-            try {
-                // Mengirim request asinkronus ke server backend Laravel
-fetch('/analyze', {
-                method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({ news_text: newsText })
-                });
+                document.getElementById('resultScore').innerText = data.skor;
+                document.getElementById('resultReason').innerText = data.alasan;
+                document.getElementById('resultRecommendation').innerText = data.rekomendasi;
 
-                const result = await response.json();
+                const banner = document.getElementById('resultBanner');
+                const iconBox = document.getElementById('resultIconBox');
+                const statusText = document.getElementById('resultStatusText');
 
-                if (result.success && result.data) {
-                    const data = result.data;
+                banner.className = "px-6 py-5 text-white flex items-center space-x-4";
 
-                    // Suntikkan data ke elemen HTML
-                    document.getElementById('resultScore').innerText = data.skor;
-                    document.getElementById('resultReason').innerText = data.alasan;
-                    document.getElementById('resultRecommendation').innerText = data.rekomendasi;
-
-                    const banner = document.getElementById('resultBanner');
-                    const iconBox = document.getElementById('resultIconBox');
-                    const statusText = document.getElementById('resultStatusText');
-
-                    // Reset styling banner
-                    banner.className = "px-6 py-5 text-white flex items-center space-x-4";
-
-                    // Atur warna banner & ikon berdasarkan status berita
-                    if (data.status === 'HOAX') {
-                        banner.classList.add('bg-gradient-to-r', 'from-rose-500', 'to-red-600');
-                        iconBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-                        statusText.innerText = 'TERINDIKASI HOAX / PALSU';
-                    } else if (data.status === 'POTENSI_HOAX') {
-                        banner.classList.add('bg-gradient-to-r', 'from-amber-500', 'to-orange-600');
-                        iconBox.innerHTML = '<i class="fa-solid fa-circle-question"></i>';
-                        statusText.innerText = 'POTENSI HOAX / MERAGUKAN';
-                    } else {
-                        banner.classList.add('bg-gradient-to-r', 'from-emerald-500', 'to-teal-600');
-                        iconBox.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-                        statusText.innerText = 'BERITA VALID / AKURAT';
-                    }
-
-                    // Sembunyikan loading, munculkan hasil analisis
-                    loadingState.classList.add('hidden');
-                    resultSection.classList.remove('hidden');
-                    
-                    // Trigger animasi transisi CSS
-                    setTimeout(() => {
-                        resultSection.classList.remove('opacity-0', 'scale-95');
-                        resultSection.classList.add('opacity-100', 'scale-100');
-                    }, 50);
-
+                if (data.status === 'HOAX') {
+                    banner.classList.add('bg-gradient-to-r', 'from-rose-500', 'to-red-600');
+                    iconBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                    statusText.innerText = 'TERINDIKASI HOAX / PALSU';
+                } else if (data.status === 'POTENSI_HOAX') {
+                    banner.classList.add('bg-gradient-to-r', 'from-amber-500', 'to-orange-600');
+                    iconBox.innerHTML = '<i class="fa-solid fa-circle-question"></i>';
+                    statusText.innerText = 'POTENSI HOAX / MERAGUKAN';
                 } else {
-                    alert(result.message || 'Terjadi gangguan sistem. Silakan coba sesaat lagi.');
-                    loadingState.classList.add('hidden');
+                    banner.classList.add('bg-gradient-to-r', 'from-emerald-500', 'to-teal-600');
+                    iconBox.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                    statusText.innerText = 'BERITA VALID / AKURAT';
                 }
 
-            } catch (error) {
-                console.error(error);
-                alert('Gagal tersambung ke web server Laravel. Pastikan web servermu sudah dijalankan.');
                 loadingState.classList.add('hidden');
-            } finally {
-                // Kembalikan tombol ke keadaan normal
-                btnSubmit.disabled = false;
+                resultSection.classList.remove('hidden');
+
+                setTimeout(() => {
+                    resultSection.classList.remove('opacity-0', 'scale-95');
+                    resultSection.classList.add('opacity-100', 'scale-100');
+                }, 50);
+
+            } else {
+                alert(result.message || 'Terjadi gangguan sistem. Silakan coba sesaat lagi.');
+                loadingState.classList.add('hidden');
             }
-        });
-    </script>
+
+        } catch (error) {
+            console.error(error);
+            alert('Gagal menghubungi server analisis. Silakan refresh halaman atau coba beberapa saat lagi.');
+            loadingState.classList.add('hidden');
+        } finally {
+            btnSubmit.disabled = false;
+        }
+    });
+</script>
 </body>
 </html>
