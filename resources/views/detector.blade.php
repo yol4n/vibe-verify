@@ -164,7 +164,7 @@
 
             try {
                 // Mengirim request asinkronus ke server backend Laravel
-                const response = await fetch("{{ route('detector.analyze') }}", {
+                const response = await fetch('/analyze', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
